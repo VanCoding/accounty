@@ -1,0 +1,131 @@
+.container
+	h3 Transaktion
+	if this.transaction
+		Context(target=this.transaction)
+			.form-horizontal
+				Binding(name="date")
+					FormGroup(label="Datum" labelClass="col-sm-2" wrapperClass="col-sm-10")
+						Date
+				Binding(name="comment")
+					FormGroup(label="Kommentar" labelClass="col-sm-2" wrapperClass="col-sm-10")
+						Input(type="text")
+	if this.bookings
+		table.table.table-striped
+			thead
+				tr
+					th Von
+					th Nach
+					th Betrag
+					th
+			tbody
+				each booking in this.bookings
+					Context(target=booking)
+						tr
+							td
+								Binding(name="from" onChange=this.autoAdd.bind(this,booking))
+									Account
+							td
+								Binding(name="to")
+									Account
+							td
+								Binding(name="amount")
+									Number
+							td(style="width:40px")
+								.btn.btn-danger(onClick=this.removeBooking.bind(this,booking))
+									.glyphicon.glyphicon-trash
+				tr
+					td(colSpan="3")
+					td
+						.btn.btn-default(onClick=this.addBooking.bind(this))
+							.glyphicon.glyphicon-plus
+	.btn-toolbar.pull-right
+		if this.transaction && this.transaction.id
+			.btn.btn-danger(onClick=this.delete.bind(this)) Löschen
+		.btn.btn-primary(onClick=this.save.bind(this)) Speichern
+script(section="body").
+	constructor(p,c){
+		super(p,c);
+		this.componentWillReceiveProps(p);
+	}
+	async componentWillReceiveProps(p){
+		this.deletedBookings = [];
+		if(p.transaction == "new"){
+			this.transaction = {						
+				date:null,
+				comment:""
+			}
+			this.bookings = [];
+		}else{
+			[this.transaction,this.bookings] = await Promise.all([
+				client.getTransaction(p.transaction),
+				client.getBookings({transaction:p.transaction})
+			]);
+			for(var booking of this.bookings){
+				delete booking.transactionDate;
+				delete booking.transactionComment;
+				delete booking.fromName;
+				delete booking.toName;
+			}
+		}
+		this.addBooking();
+	}
+	
+	autoAdd(booking){
+		if(this.bookings.indexOf(booking) != this.bookings.length-1) return;
+		this.addBooking();
+	}
+	
+	addBooking(){
+		this.bookings.push({
+			from: null,
+			to: null,
+			amount: null
+		})
+		this.forceUpdate();
+	}
+	
+	removeBooking(booking){
+		this.bookings.splice(this.bookings.indexOf(booking),1);
+		this.forceUpdate();
+		if(booking.id) this.deletedBookings.push(booking.id);
+	}
+	
+	async save(){
+		var created = false;
+		if(this.transaction.id){
+			await client.updateTransaction(this.transaction.id,this.transaction);
+		}else{
+			this.transaction.id = await client.createTransaction(this.transaction);
+			created = true;
+		}
+		for(var booking of this.bookings){
+			if(!booking.from && !booking.to && !booking.amount){
+				if(booking.id) this.deletedBookings.push(booking.id);
+				continue;
+			}
+			booking.transaction = this.transaction.id;
+			if(!booking.id){
+				booking.id = await client.createBooking(booking);
+			}else{
+				await client.updateBooking(booking.id,booking);
+			}
+		}
+		for(var id of this.deletedBookings){
+			await client.deleteBooking(id);
+		}
+		this.deletedBookings = [];
+		if(created) this.props.onCreate();
+	}
+	
+	async delete(){
+		await client.deleteTransaction(this.props.transaction);
+		history.back();
+	}
+script.
+	var client = require("./client");
+	var {Context,Binding} = require("react-bicon");
+	var FormGroup = require("./formgroup");
+	var Input = require("./input");
+	var Date = require("./datefield");
+	var Account = require("./AccountSelect");
+	var Number = require("./number");

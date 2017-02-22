@@ -1,0 +1,56 @@
+.container
+	h3 Erfolgsrechung
+	if this.accounts
+		table.table
+			thead
+				tr(style="borderBottom:1px solid black")
+					th(style="borderRight:1px solid black") Aufwand
+					th Ertrag
+				tr
+					td(style="borderRight:1px solid black")
+						each account in this.outlays
+							div
+								= account.name
+								.pull-right= account.balance.abs()+""
+					td
+						each account in this.yields
+							div
+								= account.name
+								.pull-right= account.balance.abs()+""
+				if !this.balance.equals(0)
+					tr
+						th(style="borderRight:1px solid black")
+							if this.balance.lt(0)
+								| Gewinn
+								.pull-right= this.balance.abs()+""					
+						th
+							if this.balance.gt(0)
+								| Verlust
+								.pull-right= this.balance.abs()+""					
+				tr(style="borderTop:1px solid black")
+					td.text-right(style="borderRight:1px solid black")= this.total+""
+					td.text-right= this.total+""
+script(section="body").
+	constructor(props,context){
+		super(props,context);
+		this.componentWillReceiveProps(props);
+	}
+	async componentWillReceiveProps(props){
+		this.accounts = await client.getAccounts({});
+		for(var account of this.accounts){
+			account.balance = decimal(account.balance);
+		}
+		this.outlays = this.accounts.filter(a=>a.type===1&&a.balance.gt(0));
+		this.yields = this.accounts.filter(a=>a.type===1&&a.balance.lt(0));
+		this.outlaysTotal = this.outlays.reduce((total,account)=>total.plus(account.balance.abs()),decimal(0));
+		this.yieldsTotal = this.yields.reduce((total,account)=>total.plus(account.balance.abs()),decimal(0));
+		
+		this.total = decimal.max(this.outlaysTotal,this.yieldsTotal);
+		this.balance = this.outlaysTotal.minus(this.yieldsTotal);
+		
+		
+		this.forceUpdate();
+	}
+script.
+	var client = require("./client");
+	var decimal = require("decimal.js");

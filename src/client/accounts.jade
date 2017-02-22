@@ -1,0 +1,62 @@
+.container
+	.btn-toolbar.pull-right
+		.btn.btn-primary(onClick=this.props.onSelect.bind(this,"new")) Neu
+	h3 Konti
+	Context(target=this.search onChange=this.update.bind(this))
+		.row
+			.col-sm-6.form-horizontal
+				Binding(name="name")
+					FormGroup(label="Name" labelClass="col-sm-4" wrapperClass="col-sm-8")
+						Input(type="text")
+			.col-sm-6.form-horizontal
+				Binding(name="number")
+					FormGroup(label="Nummer" labelClass="col-sm-4" wrapperClass="col-sm-8")
+						Input(type="text")
+	table.table.table-striped.table-hover
+		thead
+			tr
+				th Name
+				th Nummer
+				th Typ
+				th Aktiv/Passiv
+				th Saldo
+		tbody
+			each account in this.accounts
+				tr(onClick=this.props.onSelect.bind(this,account.id))
+					td= account.name
+					td= account.number
+					td= account.type+""
+					td= account.active+""
+					td= decimal(account.balance).abs()+" ("+(account.balance[0]=="-"?"Soll":"Haben")+")"
+script(section="body").
+	constructor(p,c){
+		super(p,c);
+		this.componentWillReceiveProps(p);
+	}
+	async componentWillReceiveProps(p){
+		this.search = query.parse(p.query);
+		this.accounts = await client.getAccounts(this.search);
+		this.forceUpdate();
+	}
+	
+	update(){
+		this.props.location.replace("",query.serialize(this.search));
+	}
+script.
+	var client = require("./client");
+	var {Context,Binding} = require("react-bicon");
+	var FormGroup = require("./formgroup");
+	var Input = require("./input");
+	var QueryUtil = require("./queryutil");
+	var {Router} = require("react-route-system");
+	var decimal = require("decimal.js");
+	
+	Component.router = new Router()
+		.add("search","",null,{name:true,number:true,type:true,active:true})
+			
+	var query = new QueryUtil({
+		name:"",
+		number:"",
+		type:Number,
+		active:Boolean
+	});

@@ -1,0 +1,68 @@
+.app
+	div(style="minHeight:100%;marginBottom:-60px;paddingBottom:60px;boxSizing:border-box")
+		Navbar
+			Header
+				Brand 
+					a(onClick=this.goTo.bind(this,"/")) Accounty
+				Toggle
+			Collapse(fixedTop)
+				Nav
+					each name in Object.keys(menu)
+						NavItem(active=(location.pathname.indexOf(menu[name]) == 0) onClick=this.goTo.bind(this,menu[name]))= name
+		- var route = this.props.route
+		if route.name == "404"
+			.container
+				h4 404 - Seite nicht gefunden
+		else
+			case route.name
+				when "home"
+					- setTimeout(()=>this.props.location.replace("/accounts"))
+				when "accounts"
+					= route.render({onSelect:this.showAccount.bind(this,false)})
+				when "account"
+					= route.render({account:this.props.params.account,onCreate:this.showAccount.bind(this,true)})
+				when "transactions"
+					= route.render({onSelect:this.showTransaction.bind(this,false)})
+				when "transaction"
+					= route.render({transaction:this.props.params.transaction,onCreate:this.showTransaction.bind(this,true)})
+				when "journal"
+					= route.render({onSelect:b=>this.showTransaction(false,b.transaction)})
+				when "incomestatement"
+				when "balance"
+					= route.render({})
+script(section="body").
+	goTo(path,replace,e){
+		this.props.location[replace?"replace":"push"](path);
+	}
+	showAccount(replace,account){
+		this.goTo("/accounts/"+account,replace);
+	}
+	showTransaction(replace,account){
+		this.goTo("/transactions/"+account,replace);
+	}
+script.
+	var client = require("./client");
+	var Navbar = require("react-bootstrap/lib/Navbar");
+	var {Collapse,Toggle,Brand,Header} = Navbar;
+	var Nav = require("react-bootstrap/lib/Nav");
+	var NavItem = require("react-bootstrap/lib/NavItem");
+	var {Router} = require("react-route-system");
+	
+	Component.router = new Router()
+		.add("home","")
+		.add("accounts","/accounts",require("./accounts"))
+		.add("account","/accounts/:account",require("./account"))
+		.add("transactions","/transactions",require("./transactions"))
+		.add("transaction","/transactions/:transaction",require("./transaction"))
+		.add("journal","/journal",require("./journal"))
+		.add("incomestatement","/incomestatement",require("./incomestatement"))
+		.add("balance","/balance",require("./balance"))
+		.add("404","*")
+	
+	var menu = {
+		"Konti":"/accounts",
+		"Transaktionen":"/transactions",
+		"Journal":"/journal",
+		"Erfolgsrechung":"/incomestatement",
+		"Bilanz":"/balance"
+	}

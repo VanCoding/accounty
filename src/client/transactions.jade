@@ -1,0 +1,59 @@
+.container
+	.btn-toolbar.pull-right
+		.btn.btn-primary(onClick=this.props.onSelect.bind(this,"new")) Neu
+	h3 Transaktionen
+	Context(target=this.search onChange=this.update.bind(this))
+		.row
+			.col-sm-6.form-horizontal
+				Binding(name="comment")
+					FormGroup(label="Kommentar" labelClass="col-sm-4" wrapperClass="col-sm-8")
+						Input(type="text")
+			.col-sm-6.form-horizontal
+				Binding(name="dateFrom")
+					FormGroup(label="Datum von" labelClass="col-sm-4" wrapperClass="col-sm-8")
+						Date
+				Binding(name="dateTo")
+					FormGroup(label="Datum bis" labelClass="col-sm-4" wrapperClass="col-sm-8")
+						Date
+	table.table.table-striped.table-hover
+		thead
+			tr
+				th Datum
+				th Kommentar
+		tbody
+			each transaction in this.transactions
+				tr(onClick=this.props.onSelect.bind(this,transaction.id))
+					td= convert.toDate(transaction.date).format("L")
+					td= transaction.comment
+script(section="body").
+	constructor(p,c){
+		super(p,c);
+		this.componentWillReceiveProps(p);
+	}
+	async componentWillReceiveProps(p){
+		this.search = query.parse(p.query);
+		this.transactions = await client.getTransactions(this.search);
+		this.forceUpdate();
+	}
+	
+	update(){
+		this.props.location.replace("",query.serialize(this.search));
+	}
+script.
+	var client = require("./client");
+	var {Context,Binding} = require("react-bicon");
+	var FormGroup = require("./formgroup");
+	var Input = require("./input");
+	var Date = require("./datefield");
+	var QueryUtil = require("./queryutil");
+	var {Router} = require("react-route-system");
+	var convert = require("../shared/dayConvert");
+	
+	Component.router = new Router()
+		.add("search","",null,{comment:true,dateFrom:true,dateTo:true})
+			
+	var query = new QueryUtil({
+		comment:"",
+		dateFrom: Number,
+		dateTo: Number
+	});

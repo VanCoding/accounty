@@ -1,0 +1,56 @@
+.container
+	h3 Konto
+	if this.account
+		Context(target=this.account)
+			.form-horizontal
+				Binding(name="name")
+					FormGroup(label="Name" labelClass="col-sm-2" wrapperClass="col-sm-10")
+						Input(type="text")
+				Binding(name="number")
+					FormGroup(label="Nummer" labelClass="col-sm-2" wrapperClass="col-sm-10")
+						Input(type="text")
+				Binding(name="type")
+					FormGroup(label="Typ" labelClass="col-sm-2" wrapperClass="col-sm-10")
+						Input(type="select" options=[{label:"Bestand",value:0},{label:"Ertrag",value:1},{label:"Eröffnung",value:2}])
+				Binding(name="active")
+					FormGroup(label="Aktiv/Passiv" labelClass="col-sm-2" wrapperClass="col-sm-10")
+						Input(type="select" options=[{label:"Aktiv",value:true},{label:"Passiv",value:false}])
+				.btn-toolbar.pull-right
+					if this.account.id
+						.btn.btn-danger(onClick=this.delete.bind(this)) Löschen
+					.btn.btn-primary(onClick=this.save.bind(this)) Speichern
+script(section="body").
+	constructor(p,c){
+		super(p,c);
+		this.componentWillReceiveProps(p);
+	}
+	async componentWillReceiveProps(p){
+		if(p.account == "new"){
+			this.account = {			
+				name:"",				
+				number:"",
+				type:1,
+				active:true
+			}
+		}else{
+			this.account = await client.getAccount(p.account);
+			this.forceUpdate();
+		}
+	}
+	async save(){
+		if(this.account.id){
+			await client.updateAccount(this.account.id,this.account);
+		}else{
+			this.props.onCreate(await client.createAccount(this.account));
+		}
+	}
+	
+	async delete(){
+		await client.deleteAccount(this.props.account);
+		history.back();
+	}
+script.
+	var client = require("./client");
+	var {Context,Binding} = require("react-bicon");
+	var FormGroup = require("./formgroup");
+	var Input = require("./input");
