@@ -23,10 +23,10 @@
 						tr
 							td
 								Binding(name="from" onChange=this.autoAdd.bind(this,booking))
-									Account
+									Account(period=this.props.period)
 							td
 								Binding(name="to")
-									Account
+									Account(period=this.props.period)
 							td
 								Binding(name="amount")
 									Number
@@ -50,7 +50,8 @@ script(section="body").
 	async componentWillReceiveProps(p){
 		this.deletedBookings = [];
 		if(p.transaction == "new"){
-			this.transaction = {						
+			this.transaction = {
+				period: this.props.period,
 				date:null,
 				comment:""
 			}
@@ -114,7 +115,7 @@ script(section="body").
 			await client.deleteBooking(id);
 		}
 		this.deletedBookings = [];
-		if(created) this.props.onCreate();
+		if(created) this.props.onCreate(this.transaction.id);
 	}
 	
 	async delete(){

@@ -1,0 +1,28 @@
+.container
+	.btn-toolbar.pull-right
+		.btn.btn-primary(onClick=this.props.onSelect.bind(this,"new")) Neu
+	h3 Zeiträume
+	table.table.table-striped.table-hover
+		thead
+			tr
+				th Name
+				th Start
+				th Ende
+		tbody
+			each period in this.periods
+				tr(onClick=this.props.onSelect.bind(this,period.id))
+					td= period.name
+					td= convert.toDate(period.start).format("L")
+					td= convert.toDate(period.end).format("L")
+script(section="body").
+	constructor(p,c){
+		super(p,c);
+		this.componentWillReceiveProps(p);
+	}
+	async componentWillReceiveProps(p){
+		this.periods = await client.getPeriods({});
+		this.forceUpdate();
+	}
+script.
+	var client = require("./client");
+	var convert = require("../shared/dayConvert");

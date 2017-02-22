@@ -26,7 +26,8 @@ script(section="body").
 	}
 	async componentWillReceiveProps(p){
 		if(p.account == "new"){
-			this.account = {			
+			this.account = {
+				period: this.props.period,
 				name:"",				
 				number:"",
 				type:1,

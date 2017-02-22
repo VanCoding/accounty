@@ -32,7 +32,7 @@ script(section="body").
 	}
 	async componentWillReceiveProps(p){
 		this.search = query.parse(p.query);
-		this.transactions = await client.getTransactions(this.search);
+		this.transactions = await client.getTransactions(Object.assign({period:this.props.period},this.search));
 		this.forceUpdate();
 	}
 	

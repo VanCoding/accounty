@@ -35,8 +35,30 @@ class Client{
 		await this.getResponse(url,opts);
 	}
 
+	async getPeriods(opts){
+        var params = new URLSearchParams();
+		return await this.getJson("/api/periods?"+params.toString());
+	}
+
+	async createPeriod(data){
+		return await this.getText("/api/periods",{method:"POST",jsonBody:data})
+	}
+
+	async getPeriod(period){
+		return await this.getJson("/api/periods/"+period);
+	}
+
+	async updatePeriod(period,data){
+		await this.execute("/api/periods/"+period,{method:"PATCH",jsonBody:data});
+	}
+
+	async deletePeriod(period){
+		await this.execute("/api/periods/"+period,{method:"DELETE"});
+	}
+
 	async getAccounts(opts){
         var params = new URLSearchParams();
+		if(opts.period) params.append("period",opts.period);
 		if(opts.name) params.append("name",opts.name);
 		if(opts.number) params.append("number",opts.number);
 		if(opts.type !== null && opts.type !== undefined) params.append("type",opts.type);
@@ -61,7 +83,7 @@ class Client{
 	}
 	async getTransactions(opts){
         var params = new URLSearchParams();
-		if(opts.name) params.append("name",opts.name);
+		if(opts.period) params.append("period",opts.period);
 		if(opts.comment) params.append("comment",opts.comment);
 		if(opts.dateFrom !== null && opts.dateFrom !== undefined) params.append("dateFrom",opts.dateFrom);
 		if(opts.dateTo !== null && opts.dateTo !== undefined) params.append("dateTo",opts.dateTo);
@@ -85,7 +107,12 @@ class Client{
 	}
 	async getBookings(opts){
         var params = new URLSearchParams();
+		if(opts.period) params.append("period",opts.period);
 		if(opts.transaction) params.append("transaction",opts.transaction);
+		if(opts.comment) params.append("comment",opts.comment);
+		if(opts.amount !== null && opts.amount !== undefined) params.append("amount",opts.amount);
+		if(opts.dateFrom !== null && opts.dateFrom !== undefined) params.append("dateFrom",opts.dateFrom);
+		if(opts.dateTo !== null && opts.dateTo !== undefined) params.append("dateTo",opts.dateTo);
 		return await this.getJson("/api/bookings?"+params.toString());
 	}
 

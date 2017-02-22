@@ -6,9 +6,15 @@
 					a(onClick=this.goTo.bind(this,"/")) Accounty
 				Toggle
 			Collapse(fixedTop)
-				Nav
-					each name in Object.keys(menu)
-						NavItem(active=(location.pathname.indexOf(menu[name]) == 0) onClick=this.goTo.bind(this,menu[name]))= name
+				if this.props.params.period
+					Nav
+						each name in Object.keys(menu)
+							NavItem(active=(location.pathname == "/"+this.props.params.period+menu[name]) onClick=this.goTo.bind(this,"/"+this.props.params.period+menu[name]))= name
+				Nav(pullRight)
+					NavDropdown(title=((this.periods||[]).filter(p=>(p.id+"")==this.props.params.period)[0]||{name:"Übersicht"}).name)
+						MenuItem(onClick=this.goTo.bind(this,"/"))= "Übersicht"
+						each period in this.periods
+							MenuItem(onClick=this.goTo.bind(this,"/"+period.id+"/transactions"))= period.name				
 		- var route = this.props.route
 		if route.name == "404"
 			.container
@@ -16,29 +22,42 @@
 		else
 			case route.name
 				when "home"
-					- setTimeout(()=>this.props.location.replace("/accounts"))
+					= route.render({onSelect:this.showPeriod.bind(this,false)})
+				when "period"
+					= route.render({period:this.props.params.period, onCreate:this.showPeriod.bind(this,true)})
 				when "accounts"
-					= route.render({onSelect:this.showAccount.bind(this,false)})
+					= route.render({period:this.props.params.period, onSelect:this.showAccount.bind(this,false)})
 				when "account"
-					= route.render({account:this.props.params.account,onCreate:this.showAccount.bind(this,true)})
+					= route.render({period:this.props.params.period, account:this.props.params.account, onCreate:this.showAccount.bind(this,true)})
 				when "transactions"
-					= route.render({onSelect:this.showTransaction.bind(this,false)})
+					= route.render({period:this.props.params.period, onSelect:this.showTransaction.bind(this,false)})
 				when "transaction"
-					= route.render({transaction:this.props.params.transaction,onCreate:this.showTransaction.bind(this,true)})
+					= route.render({period:this.props.params.period, transaction:this.props.params.transaction,onCreate:this.showTransaction.bind(this,true)})
 				when "journal"
-					= route.render({onSelect:b=>this.showTransaction(false,b.transaction)})
+					= route.render({period:this.props.params.period, onSelect:b=>this.showTransaction(false,b.transaction)})
 				when "incomestatement"
 				when "balance"
-					= route.render({})
+					= route.render({period:this.props.params.period})
 script(section="body").
+	constructor(props,context){
+		super(props,context);
+		this.componentWillReceiveProps(props);
+	}
+	async componentWillReceiveProps(props){
+		this.periods = await client.getPeriods({});
+		this.forceUpdate();
+	}
 	goTo(path,replace,e){
 		this.props.location[replace?"replace":"push"](path);
 	}
+	showPeriod(replace,period){
+		this.goTo("/"+period,replace);
+	}
 	showAccount(replace,account){
-		this.goTo("/accounts/"+account,replace);
+		this.goTo("/"+this.props.params.period+"/accounts/"+account,replace);
 	}
 	showTransaction(replace,account){
-		this.goTo("/transactions/"+account,replace);
+		this.goTo("/"+this.props.params.period+"/transactions/"+account,replace);
 	}
 script.
 	var client = require("./client");
@@ -47,19 +66,23 @@ script.
 	var Nav = require("react-bootstrap/lib/Nav");
 	var NavItem = require("react-bootstrap/lib/NavItem");
 	var {Router} = require("react-route-system");
+	var NavDropdown = require("react-bootstrap/lib/NavDropdown");
+	var MenuItem = require("react-bootstrap/lib/MenuItem");
 	
 	Component.router = new Router()
-		.add("home","")
-		.add("accounts","/accounts",require("./accounts"))
-		.add("account","/accounts/:account",require("./account"))
-		.add("transactions","/transactions",require("./transactions"))
-		.add("transaction","/transactions/:transaction",require("./transaction"))
-		.add("journal","/journal",require("./journal"))
-		.add("incomestatement","/incomestatement",require("./incomestatement"))
-		.add("balance","/balance",require("./balance"))
+		.add("home","",require("./periods"))
+		.add("period","/:period",require("./period"))
+		.add("accounts","/:period/accounts",require("./accounts"))
+		.add("account","/:period/accounts/:account",require("./account"))
+		.add("transactions","/:period/transactions",require("./transactions"))
+		.add("transaction","/:period/transactions/:transaction",require("./transaction"))
+		.add("journal","/:period/journal",require("./journal"))
+		.add("incomestatement","/:period/incomestatement",require("./incomestatement"))
+		.add("balance","/:period/balance",require("./balance"))
 		.add("404","*")
 	
 	var menu = {
+		"Zeitraum":"",
 		"Konti":"/accounts",
 		"Transaktionen":"/transactions",
 		"Journal":"/journal",

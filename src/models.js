@@ -2,14 +2,19 @@ var sql = require("sql");
 
 sql.setDialect("postgres");
 
+exports.Period = sql.define({
+	name:"periods",
+	columns:["id","name","start","end"]
+})
+
 exports.Account = sql.define({
 	name:"accounts",
-	columns:["id","name","number","type","active"]
+	columns:["id","period","name","number","type","active"]
 });
 
 exports.Transaction = sql.define({
 	name:"transactions",
-	columns:["id","date","comment"]
+	columns:["id","period","date","comment"]
 });
 
 exports.Booking = sql.define({

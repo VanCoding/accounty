@@ -15,9 +15,12 @@ module.exports = async function(c){
 			.join(to).on(b.to.equals(to.id))
 		);
 
-	if(c.query.transaction){
-		query.where(b.transaction.equals(parseFloat(c.query.transaction)));
-	}
+	if(c.query.period) query.where(t.period.equals(c.query.period));
+	if(c.query.transaction)	query.where(b.transaction.equals(c.query.transaction));
+	if(c.query.comment) query.where(t.comment.like("%"+c.query.comment+"%"));
+	if(c.query.dateFrom) query.where(t.date.gte(parseFloat(c.query.dateFrom)));
+	if(c.query.dateTo) query.where(t.date.lte(parseFloat(c.query.dateTo)));
+	if(c.query.amount) query.where(b.amount.equals(c.query.amount));
 
 	query.order([t.date.asc,b.id.asc])
 

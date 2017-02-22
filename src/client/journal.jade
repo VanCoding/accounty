@@ -8,7 +8,7 @@
 						Input(type="text")
 				Binding(name="amount")
 					FormGroup(label="Betrag" labelClass="col-sm-4" wrapperClass="col-sm-8")
-						Number
+						NumberField
 			.col-sm-6.form-horizontal
 				Binding(name="dateFrom")
 					FormGroup(label="Datum von" labelClass="col-sm-4" wrapperClass="col-sm-8")
@@ -39,11 +39,12 @@ script(section="body").
 	}
 	async componentWillReceiveProps(p){
 		this.search = query.parse(p.query);
-		this.bookings = await client.getBookings(this.search);
+		this.bookings = await client.getBookings(Object.assign({period:this.props.period},this.search));
 		this.forceUpdate();
 	}
 	
 	update(){
+		console.log(this.search);
 		this.props.location.replace("",query.serialize(this.search));
 	}
 script.
@@ -55,7 +56,7 @@ script.
 	var QueryUtil = require("./queryutil");
 	var {Router} = require("react-route-system");
 	var convert = require("../shared/dayConvert");
-	var Number = require("./number");
+	var NumberField = require("./number");
 	
 	Component.router = new Router()
 		.add("search","",null,{comment:true,amount:true,dateFrom:true,dateTo:true})

@@ -1,0 +1,53 @@
+.container
+	h3 Konto
+	if this.period
+		Context(target=this.period)
+			.form-horizontal
+				Binding(name="name")
+					FormGroup(label="Name" labelClass="col-sm-2" wrapperClass="col-sm-10")
+						Input(type="text")
+				Binding(name="start")
+					FormGroup(label="Start" labelClass="col-sm-2" wrapperClass="col-sm-10")
+						Date
+				Binding(name="end")
+					FormGroup(label="Ende" labelClass="col-sm-2" wrapperClass="col-sm-10")
+						Date
+				.btn-toolbar.pull-right
+					if this.period.id
+						.btn.btn-danger(onClick=this.delete.bind(this)) Löschen
+					.btn.btn-primary(onClick=this.save.bind(this)) Speichern
+script(section="body").
+	constructor(p,c){
+		super(p,c);
+		this.componentWillReceiveProps(p);
+	}
+	async componentWillReceiveProps(p){
+		if(p.period == "new"){
+			this.period = {			
+				name:"",
+				start: null,
+				end: null
+			}
+		}else{
+			this.period = await client.getPeriod(p.period);
+			this.forceUpdate();
+		}
+	}
+	async save(){
+		if(this.period.id){
+			await client.updatePeriod(this.period.id,this.period);
+		}else{
+			this.props.onCreate(await client.createPeriod(this.period));
+		}
+	}
+	
+	async delete(){
+		await client.deletePeriod(this.props.period);
+		history.back();
+	}
+script.
+	var client = require("./client");
+	var {Context,Binding} = require("react-bicon");
+	var FormGroup = require("./formgroup");
+	var Input = require("./input");
+	var Date = require("./datefield");

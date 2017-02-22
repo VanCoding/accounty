@@ -12,6 +12,11 @@ module.exports = async function(c){
 			.leftJoin(fromBalances).on(a.id.equals(fromBalances.account))
 			.leftJoin(toBalances).on(a.id.equals(toBalances.account))
 		);
+	if(c.query.period) query.where(a.period.equals(c.query.period));
+	if(c.query.name) query.where(a.name.like("%"+c.query.name+"%"));
+	if(c.query.number) query.where(a.number.equals(c.query.number));
+	if(c.query.type) query.where(a.type.equals(JSON.parse(c.query.type)));
+	if(c.query.active) query.where(a.active.equals(JSON.parse(c.query.active)));
 	var accounts = await c.db.query(query.toQuery());
 	for(var account of accounts){
 		account.fromTotal = decimal(account.fromTotal||"0")

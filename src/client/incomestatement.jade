@@ -36,7 +36,7 @@ script(section="body").
 		this.componentWillReceiveProps(props);
 	}
 	async componentWillReceiveProps(props){
-		this.accounts = await client.getAccounts({});
+		this.accounts = await client.getAccounts({period:this.props.period});
 		for(var account of this.accounts){
 			account.balance = decimal(account.balance);
 		}
