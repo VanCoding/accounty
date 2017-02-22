@@ -24,7 +24,7 @@
 				when "home"
 					= route.render({onSelect:this.showPeriod.bind(this,false)})
 				when "period"
-					= route.render({period:this.props.params.period, onCreate:this.showPeriod.bind(this,true)})
+					= route.render({period:this.props.params.period, onCreate:this.showPeriod.bind(this,true), onImport:this.showImport.bind(this)})
 				when "accounts"
 					= route.render({period:this.props.params.period, onSelect:this.showAccount.bind(this,false)})
 				when "account"
@@ -38,6 +38,8 @@
 				when "incomestatement"
 				when "balance"
 					= route.render({period:this.props.params.period})
+				when "import"
+					= route.render({period:this.props.params.period, onImport: this.goTo.bind(this,"/"+this.props.params.period+"/transactions",true)})
 script(section="body").
 	constructor(props,context){
 		super(props,context);
@@ -59,6 +61,9 @@ script(section="body").
 	showTransaction(replace,account){
 		this.goTo("/"+this.props.params.period+"/transactions/"+account,replace);
 	}
+	showImport(){
+		this.goTo("/"+this.props.params.period+"/import");
+	}
 script.
 	var client = require("./client");
 	var Navbar = require("react-bootstrap/lib/Navbar");
@@ -79,6 +84,7 @@ script.
 		.add("journal","/:period/journal",require("./journal"))
 		.add("incomestatement","/:period/incomestatement",require("./incomestatement"))
 		.add("balance","/:period/balance",require("./balance"))
+		.add("import","/:period/import",require("./import"))
 		.add("404","*")
 	
 	var menu = {

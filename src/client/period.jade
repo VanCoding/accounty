@@ -13,6 +13,7 @@
 					FormGroup(label="Ende" labelClass="col-sm-2" wrapperClass="col-sm-10")
 						Date
 				.btn-toolbar.pull-right
+					.btn.btn-warning(onClick=this.props.onImport.bind(this)) Vorperiode importieren
 					if this.period.id
 						.btn.btn-danger(onClick=this.delete.bind(this)) Löschen
 					.btn.btn-primary(onClick=this.save.bind(this)) Speichern

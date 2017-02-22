@@ -1,0 +1,82 @@
+.container
+	h3 Vorperiode importieren
+	Context(target=this onChange=this.matchAccounts.bind(this))
+		.form-horizontal
+			Binding(name="period")
+				FormGroup(label="Vorperiode" labelClass="col-sm-2" wrapperClass="col-sm-10")
+					Period
+	if this.periodAccounts
+		table.table.table-striped
+			thead
+				tr
+					th Konto Vorperiode
+					th Konto Aktuelle Periode
+			tbody
+				each account in this.periodAccounts
+					tr
+						td= account.name+" ("+account.number+")"
+						td
+							Context(target=account)
+								Binding(name="match")
+									Account(period=this.props.period)
+		.btn-toolbar.pull-right
+			.btn.btn-primary(onClick=this.import.bind(this)) Importieren
+script(section="body").
+	constructor(props,context){
+		super(props,context);
+		this.componentWillReceiveProps(props);
+	}
+	async componentWillReceiveProps(props){
+		this.period = null;
+		this.accounts = await client.getAccounts({period:this.props.period});
+		this.forceUpdate();
+	}
+	async matchAccounts(){
+		if(!this.period){
+			delete this.periodAccounts;
+			this.forceUpdate();
+			return;
+		}
+		this.periodAccounts = await client.getAccounts({period:this.period});
+		this.openingAccount = null;
+		for(var account of this.periodAccounts){
+			var match = this.accounts.filter(a=>a.number == account.number)[0];
+			if(!match) match = this.accounts.filter(a=>a.name == account.name)[0];
+			account.match = match?match.id:null;
+		}
+		this.forceUpdate();
+	}
+	async import(){
+		var period = await client.getPeriod(this.props.period);
+		var openingAccount = await client.createAccount({period:period.id,name:"Eröffnung",number:"1",type:2,active:true});
+		var transaction = await client.createTransaction({period:period.id,date:period.start,comment:"Eröffnung"});
+		for(var account of this.periodAccounts){
+			if(!account.match){
+				var a = await client.getAccount(account.id);
+				delete a.id;
+				a.period = this.props.period;
+				account.match = await client.createAccount(a);
+			}
+			account.balance = decimal(account.balance);
+			if(account.type === 0 && !account.balance.equals(0)){
+				var booking = {transaction:transaction,amount:account.balance.abs()+""};
+				if(account.balance.gt(0)){
+					booking.from = account.match;
+					booking.to = openingAccount;
+				}else{
+					booking.to = account.match;
+					booking.from = openingAccount;
+				}
+				await client.createBooking(booking);
+			}			
+		}
+		this.props.onImport();
+	}	
+script.
+	var client = require("./client");
+	var Period = require("./PeriodSelect");
+	var Account = require("./AccountSelect");
+	var {Context,Binding} = require("react-bicon");
+	var FormGroup = require("./formgroup");
+	var decimal = require("decimal.js");
+	
