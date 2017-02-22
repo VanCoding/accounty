@@ -21,11 +21,11 @@
 					tr
 						th(style="borderRight:1px solid black")
 							if this.balance.lt(0)
-								| Gewinn
+								| Nicht verbuchter Gewinn
 								.pull-right= this.balance.abs()+""					
 						th
 							if this.balance.gt(0)
-								| Verlust
+								| Nicht verbuchter Verlust
 								.pull-right= this.balance.abs()+""					
 				tr(style="borderTop:1px solid black")
 					td.text-right(style="borderRight:1px solid black")= this.total+""
