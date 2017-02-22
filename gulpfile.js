@@ -64,3 +64,10 @@ gulp.task("build",["buildClient","buildServer"],function(){
 gulp.task("start",["build"],function(cb){
 	require("./lib");
 });
+
+gulp.task("scriptDatabase",function(){
+	var config = JSON.parse(fs.readFileSync("./config.json")+"");
+	var db = config.db;
+	var script = cp.execSync("pg_dump --dbname=postgresql://"+db.user+":"+db.password+"@"+db.host+":5432/"+db.database+" --schema=public --schema-only").toString("utf8");
+	fs.writeFileSync("./database.sql",script);
+})
