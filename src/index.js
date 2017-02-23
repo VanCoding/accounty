@@ -2,7 +2,7 @@ var Koa = require("koa");
 var mount = require("koa-mount");
 var files = require("koa-static");
 var auth = require("koa-basic-auth");
-var fs = require("fs-promise");
+var fs = require("fs");
 var Database = require("pg-promise")();
 var cp = require("child_process");
 var v = require("./models").Version;
@@ -10,7 +10,7 @@ require("babel-polyfill");
 
 async function start(){
 	try{
-		var config = JSON.parse((await fs.readFile("./config.json"))+"");
+		var config = JSON.parse(fs.readFileSync("./config.json")+"");
 		var db = Database(config.db);
 
 		var app = new Koa();
@@ -57,7 +57,7 @@ async function start(){
 						s();
 					});
 				});
-				var query = v.insert({version:JSON.parse((await fs.readFile("./package.json"))+"").version});
+				var query = v.insert({version:JSON.parse(fs.readFileSync("./package.json")+"").version});
 				await db.none(query.toQuery());
 				console.log("initialized database");
 			}catch(e){
