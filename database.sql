@@ -2,12 +2,11 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 9.6.1
--- Dumped by pg_dump version 9.6.1
+-- Dumped from database version 9.5.0
+-- Dumped by pg_dump version 9.5.0
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
-SET idle_in_transaction_session_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
 SET check_function_bodies = false;
@@ -30,7 +29,8 @@ CREATE TABLE accounts (
     number character varying(50),
     type integer,
     active boolean,
-    period bigint
+    period bigint,
+    tax boolean DEFAULT false NOT NULL
 );
 
 
@@ -45,7 +45,9 @@ CREATE TABLE bookings (
     transaction bigint,
     "from" bigint,
     "to" bigint,
-    amount numeric
+    amount numeric,
+    tax numeric,
+    "taxBooking" bigint
 );
 
 
@@ -197,35 +199,35 @@ ALTER SEQUENCE version_id_seq OWNED BY version.id;
 
 
 --
--- Name: accounts id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY accounts ALTER COLUMN id SET DEFAULT nextval('tables_id_seq'::regclass);
 
 
 --
--- Name: bookings id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY bookings ALTER COLUMN id SET DEFAULT nextval('entries_id_seq'::regclass);
 
 
 --
--- Name: periods id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY periods ALTER COLUMN id SET DEFAULT nextval('periods_id_seq'::regclass);
 
 
 --
--- Name: transactions id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY transactions ALTER COLUMN id SET DEFAULT nextval('transactions_id_seq'::regclass);
 
 
 --
--- Name: version id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY version ALTER COLUMN id SET DEFAULT nextval('version_id_seq'::regclass);
@@ -235,6 +237,9 @@ ALTER TABLE ONLY version ALTER COLUMN id SET DEFAULT nextval('version_id_seq'::r
 -- Name: public; Type: ACL; Schema: -; Owner: postgres
 --
 
+REVOKE ALL ON SCHEMA public FROM PUBLIC;
+REVOKE ALL ON SCHEMA public FROM postgres;
+GRANT ALL ON SCHEMA public TO postgres;
 GRANT ALL ON SCHEMA public TO PUBLIC;
 
 
