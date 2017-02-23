@@ -2,6 +2,11 @@ var sql = require("sql");
 
 sql.setDialect("postgres");
 
+exports.Version = sql.define({
+	name:"version",
+	columns:["id","version"]
+})
+
 exports.Period = sql.define({
 	name:"periods",
 	columns:["id","name","start","end"]
