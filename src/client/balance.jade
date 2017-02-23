@@ -17,16 +17,26 @@
 							div
 								= account.name
 								.pull-right= account.balance.abs()+""
+				if !this.incomeStatementBalance.equals(0)
+					tr.warning
+						th(style="borderRight:1px solid black")
+							if this.incomeStatementBalance.gt(0)
+								| Nicht verbuchter Verlust
+								.pull-right= this.incomeStatementBalance.abs()+""					
+						th
+							if this.incomeStatementBalance.lt(0)
+								| Nicht verbuchter Gewinn
+								.pull-right= this.incomeStatementBalance.abs()+""
 				if !this.balance.equals(0)
-					tr
+					tr.danger
 						th(style="borderRight:1px solid black")
 							if this.balance.lt(0)
-								| Nicht verbuchter Verlust
+								| Unstimmigkeit
 								.pull-right= this.balance.abs()+""					
 						th
 							if this.balance.gt(0)
-								| Nicht verbuchter Gewinn
-								.pull-right= this.balance.abs()+""					
+								| Unstimmigkeit
+								.pull-right= this.balance.abs()+""
 				tr(style="borderTop:1px solid black")
 					td.text-right(style="borderRight:1px solid black")= this.total+""
 					td.text-right= this.total+""
@@ -44,6 +54,17 @@ script(section="body").
 		this.passives = this.accounts.filter(a=>a.type===0&&a.balance.lt(0));
 		this.activesTotal = this.actives.reduce((total,account)=>total.plus(account.balance.abs()),decimal(0));
 		this.passivesTotal = this.passives.reduce((total,account)=>total.plus(account.balance.abs()),decimal(0));
+		
+		this.outlays = this.accounts.filter(a=>(a.type===1||a.type ===3)&&a.balance.gt(0));
+		this.yields = this.accounts.filter(a=>(a.type===1||a.type ===3)&&a.balance.lt(0));		
+		this.outlaysTotal = this.outlays.reduce((total,account)=>total.plus(account.balance.abs()),decimal(0));
+		this.yieldsTotal = this.yields.reduce((total,account)=>total.plus(account.balance.abs()),decimal(0));
+		this.incomeStatementBalance = this.outlaysTotal.minus(this.yieldsTotal);
+		if(this.incomeStatementBalance.gt(0)){
+			this.activesTotal = this.activesTotal.plus(this.incomeStatementBalance.abs());
+		}else{
+			this.passivesTotal = this.passivesTotal.plus(this.incomeStatementBalance.abs());
+		}
 		
 		this.total = decimal.max(this.activesTotal,this.passivesTotal);
 		this.balance = this.activesTotal.minus(this.passivesTotal);		

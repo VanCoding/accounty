@@ -14,7 +14,7 @@ exports.Period = sql.define({
 
 exports.Account = sql.define({
 	name:"accounts",
-	columns:["id","period","name","number","type","active"]
+	columns:["id","period","name","number","type","active","tax"]
 });
 
 exports.Transaction = sql.define({
@@ -24,5 +24,5 @@ exports.Transaction = sql.define({
 
 exports.Booking = sql.define({
 	name:"bookings",
-	columns:["id","transaction","from","to","amount"]
+	columns:["id","transaction","from","to","amount","tax","taxBooking"]
 });

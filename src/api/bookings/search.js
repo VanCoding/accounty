@@ -8,7 +8,7 @@ var to = a.as("to");
 
 module.exports = async function(c){
 	var query = sql
-		.select(b.id,b.transaction,b.get("from"),b.to,b.amount,t.date.as("transactionDate"),t.comment.as("transactionComment"),from.name.as("fromName"),to.name.as("toName"))
+		.select(b.id,b.transaction,b.get("from"),b.to,b.amount,b.tax,b.taxBooking,t.date.as("transactionDate"),t.comment.as("transactionComment"),from.name.as("fromName"),to.name.as("toName"))
 		.from(b
 			.join(t).on(b.transaction.equals(t.id))
 			.join(from).on(b.get("from").equals(from.id))
@@ -21,6 +21,8 @@ module.exports = async function(c){
 	if(c.query.dateFrom) query.where(t.date.gte(parseFloat(c.query.dateFrom)));
 	if(c.query.dateTo) query.where(t.date.lte(parseFloat(c.query.dateTo)));
 	if(c.query.amount) query.where(b.amount.equals(c.query.amount));
+	if(c.query.from) query.where(b.get("from").equals(c.query.from));
+	if(c.query.to) query.where(b.to.equals(c.query.to));
 
 	query.order([t.date.asc,b.id.asc])
 

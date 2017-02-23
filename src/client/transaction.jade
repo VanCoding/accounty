@@ -16,10 +16,11 @@
 					th Von
 					th Nach
 					th Betrag
+					th(width="100") MwSt
 					th
 			tbody
 				each booking in this.bookings
-					Context(target=booking)
+					Context(target=booking onChange=this.onBookingChanged.bind(this,booking))
 						tr
 							td
 								Binding(name="from" onChange=this.autoAdd.bind(this,booking))
@@ -30,6 +31,10 @@
 							td
 								Binding(name="amount")
 									Number
+							td(width="100")
+								if this.canHaveTax(booking)
+									Binding(name="tax")
+										Number
 							td(style="width:40px")
 								.btn.btn-danger(onClick=this.removeBooking.bind(this,booking))
 									.glyphicon.glyphicon-trash
@@ -49,6 +54,10 @@ script(section="body").
 	}
 	async componentWillReceiveProps(p){
 		this.deletedBookings = [];
+		this.accounts = (await client.getAccounts({period:this.props.period})).reduce((index,account)=>{
+			index[account.id] = account;
+			return index;
+		},{});
 		if(p.transaction == "new"){
 			this.transaction = {
 				period: this.props.period,
@@ -62,6 +71,10 @@ script(section="body").
 				client.getBookings({transaction:p.transaction})
 			]);
 			for(var booking of this.bookings){
+				var taxBooking = this.bookings.filter(b=>b.id == booking.taxBooking)[0];
+				if(taxBooking){
+					this.bookings.splice(this.bookings.indexOf(taxBooking),1);
+				}
 				delete booking.transactionDate;
 				delete booking.transactionComment;
 				delete booking.fromName;
@@ -69,6 +82,18 @@ script(section="body").
 			}
 		}
 		this.addBooking();
+	}
+	
+	canHaveTax(booking){
+		var type1 = booking.from && this.accounts[booking.from].type;
+		var type2 = booking.to && this.accounts[booking.to].type;
+		return (type1 === 0 && type2 === 0) || (type1 === 1 && type2 === 0) || (type1 === 0 && type2 === 1);
+	}
+	
+	onBookingChanged(booking){
+		if(!this.canHaveTax(booking)) booking.tax = null;
+		if(!booking.tax) booking.tax = null;
+		this.forceUpdate();
 	}
 	
 	autoAdd(booking){
@@ -80,7 +105,9 @@ script(section="body").
 		this.bookings.push({
 			from: null,
 			to: null,
-			amount: null
+			amount: null,
+			tax: null,
+			taxBooking: null
 		})
 		this.forceUpdate();
 	}
@@ -88,10 +115,19 @@ script(section="body").
 	removeBooking(booking){
 		this.bookings.splice(this.bookings.indexOf(booking),1);
 		this.forceUpdate();
-		if(booking.id) this.deletedBookings.push(booking.id);
+		if(booking.id) this.deletedBookings.push(booking);
 	}
 	
 	async save(){
+		for(var account in this.accounts){
+			if(this.accounts[account].tax){
+				if(this.accounts[account].active){
+					var taxActive = account;
+				}else{
+					var taxPassive = account;
+				}
+			}
+		}
 		var created = false;
 		if(this.transaction.id){
 			await client.updateTransaction(this.transaction.id,this.transaction);
@@ -101,9 +137,35 @@ script(section="body").
 		}
 		for(var booking of this.bookings){
 			if(!booking.from && !booking.to && !booking.amount){
-				if(booking.id) this.deletedBookings.push(booking.id);
+				if(booking.id) this.deletedBookings.push(booking);
 				continue;
 			}
+			
+			if(booking.tax){
+				var type1 = booking.from && this.accounts[booking.from].type;
+				var type2 = booking.to && this.accounts[booking.to].type;
+				var taxBooking = {
+					transaction:this.transaction.id,
+					amount: decimal(booking.amount).div(100).mul(booking.tax)
+				}
+				if((type1 === 0 && type2 === 0) || (type1 === 1 && type2 === 0)){
+					taxBooking.from = taxActive;
+					taxBooking.to = booking.from;
+				}else if(type1 === 0 && type2 === 1){
+					taxBooking.from = booking.to;
+					taxBooking.to = taxPassive;
+				}
+				if(booking.taxBooking){
+					await client.updateBooking(booking.taxBooking,taxBooking);
+				}else{
+					booking.taxBooking = await client.createBooking(taxBooking);
+				}
+			}else if(booking.taxBooking){
+				booking.taxBooking = null;
+				await client.deleteBooking(booking.taxBooking);
+			}
+			
+			
 			booking.transaction = this.transaction.id;
 			if(!booking.id){
 				booking.id = await client.createBooking(booking);
@@ -111,8 +173,9 @@ script(section="body").
 				await client.updateBooking(booking.id,booking);
 			}
 		}
-		for(var id of this.deletedBookings){
-			await client.deleteBooking(id);
+		for(var booking of this.deletedBookings){
+			if(booking.taxBooking) await client.deleteBooking(booking.taxBooking);
+			await client.deleteBooking(booking.id);
 		}
 		this.deletedBookings = [];
 		if(created) this.props.onCreate(this.transaction.id);
@@ -130,3 +193,4 @@ script.
 	var Date = require("./datefield");
 	var Account = require("./AccountSelect");
 	var Number = require("./number");
+	var decimal = require("decimal.js");

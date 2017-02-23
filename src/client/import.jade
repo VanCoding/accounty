@@ -48,7 +48,7 @@ script(section="body").
 	}
 	async import(){
 		var period = await client.getPeriod(this.props.period);
-		var openingAccount = await client.createAccount({period:period.id,name:"Eröffnung",number:"1",type:2,active:true});
+		var openingAccount = await client.createAccount({period:period.id,name:"Eröffnung",number:"",type:2,active:true});
 		var transaction = await client.createTransaction({period:period.id,date:period.start,comment:"Eröffnung"});
 		for(var account of this.periodAccounts){
 			if(!account.match){

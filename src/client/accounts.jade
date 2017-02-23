@@ -25,8 +25,8 @@
 				tr(onClick=this.props.onSelect.bind(this,account.id))
 					td= account.name
 					td= account.number
-					td= account.type+""
-					td= account.active+""
+					td= types[account.type]
+					td= account.type===0?(account.active?"Aktiv":"Passiv"):(account.type===1?(account.active?"Ertrag":"Aufwand"):"")
 					td= decimal(account.balance).abs()+" ("+(account.balance[0]=="-"?"Soll":"Haben")+")"
 script(section="body").
 	constructor(p,c){
@@ -50,6 +50,13 @@ script.
 	var QueryUtil = require("./queryutil");
 	var {Router} = require("react-route-system");
 	var decimal = require("decimal.js");
+	
+	var types = {
+		0: "Kapital/Schuld",
+		1: "Etrag/Aufwand",
+		2: "Eröffnungskonto",
+		3: "Erfolgsrechnung"
+	}
 	
 	Component.router = new Router()
 		.add("search","",null,{name:true,number:true,type:true,active:true})

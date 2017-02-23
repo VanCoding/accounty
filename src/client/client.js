@@ -63,6 +63,7 @@ class Client{
 		if(opts.number) params.append("number",opts.number);
 		if(opts.type !== null && opts.type !== undefined) params.append("type",opts.type);
 		if(opts.active !== null && opts.active !== undefined) params.append("active",opts.active);
+		if(opts.tax !== null && opts.tax !== undefined) params.append("tax",opts.tax);
 		return await this.getJson("/api/accounts?"+params.toString());
 	}
 
@@ -113,6 +114,8 @@ class Client{
 		if(opts.amount !== null && opts.amount !== undefined) params.append("amount",opts.amount);
 		if(opts.dateFrom !== null && opts.dateFrom !== undefined) params.append("dateFrom",opts.dateFrom);
 		if(opts.dateTo !== null && opts.dateTo !== undefined) params.append("dateTo",opts.dateTo);
+		if(opts.from) params.append("from",opts.from);
+		if(opts.to) params.append("to",opts.to);
 		return await this.getJson("/api/bookings?"+params.toString());
 	}
 
